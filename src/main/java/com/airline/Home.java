@@ -2,7 +2,14 @@ package com.airline;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.w3c.dom.events.MouseEvent;
+
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.geom.Ellipse2D;
+import java.io.File;
 
 
 public class Home {
@@ -11,8 +18,10 @@ public class Home {
     private Color primaryColor = new Color(0x074C83);
     private Color secondaryColor = new Color(0x0A6FC4);
     private Color accentColor = new Color(0xFF6B00);
+    File selectedFile ;
+    String image="C:\\Users\\INIMFON-ABASI\\Documents\\IMG20250708114027.jpg";
 
-    Home() {
+    public Home() {
         createFrame();
         createNavPanel();
         createHomeContent();
@@ -28,28 +37,84 @@ public class Home {
         frame.getContentPane().setBackground(Color.WHITE);
         
         // Add header
-        JPanel headerPanel = new JPanel();
+        JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(primaryColor);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        headerPanel.setLayout(new BorderLayout());
+        headerPanel.setPreferredSize(new Dimension(frame.getWidth(), 60)); // Fixed 60px height
         
-      
-        
+        // App Title
         JLabel titleLabel = new JLabel("PILOT AIR");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 24));
         
-        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // User Panel
+        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         userPanel.setOpaque(false);
-        JLabel userLabel = new JLabel("Welcome, Guest");
-        userLabel.setForeground(Color.WHITE);
-        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        userPanel.add(userLabel);
         
+        // Circular Image Avatar
+        JLabel avatarLabel = new JLabel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                // Load your image (replace with actual path)
+                ImageIcon icon = new ImageIcon(image);
+                Image img = icon.getImage();
+                
+                // Create circular clip
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Create circle
+                int diameter = Math.min(getWidth(), getHeight());
+                Ellipse2D.Double circle = new Ellipse2D.Double(0, 0, diameter, diameter);
+                g2.setClip(circle);
+                
+                // Draw image centered
+                int x = (getWidth() - img.getWidth(null)) / 2;
+                int y = (getHeight() - img.getHeight(null)) / 2;
+                g2.drawImage(img, x, y, null);
+                
+                // Optional: Add white border
+                g2.setClip(null);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawOval(0, 0, diameter, diameter);
+            }
+            
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(40, 40); // Fixed avatar size
+            }
+        };
+        
+        // Ensure avatar stays centered vertically
+        JPanel avatarContainer = new JPanel(new GridBagLayout());
+        avatarContainer.setOpaque(false);
+        avatarContainer.add(avatarLabel);
+        
+        userPanel.add(avatarContainer);
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(userPanel, BorderLayout.EAST);
         
         frame.add(headerPanel, BorderLayout.NORTH);
+        
+     
+       
+avatarLabel.addMouseListener(new MouseAdapter() {
+    public void mouseClicked(MouseEvent e) {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Image Files", "jpg", "jpeg", "png", "gif");
+        fileChooser.setFileFilter(filter);
+         int result = fileChooser.showOpenDialog(null);
+    if (result == JFileChooser.APPROVE_OPTION) {
+         selectedFile = fileChooser.getSelectedFile();  
+    }
+        image= selectedFile.getAbsolutePath();
+    }
+});
+
+        
+        
     }
 
     private void createNavPanel() {

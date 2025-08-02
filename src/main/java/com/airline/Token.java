@@ -73,7 +73,7 @@ public class Token {
                 .send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
           
-            e.printStackTrace();
+            System.out.println(e);
         }
 
         return response.body();

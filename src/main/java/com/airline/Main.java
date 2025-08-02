@@ -9,9 +9,9 @@ public class Main extends Token{
    
    
     public static void main(String[] args) throws Exception {
-       System.out.println( getAccessToken());
-       System.out.println( searchFlights( getAccessToken()));
-       String data = searchFlights( getAccessToken());
+    //    System.out.println( getAccessToken());
+    //    System.out.println( searchFlights( getAccessToken()));
+    //    String data = searchFlights( getAccessToken());
    
     //    String carrierCode = "AF";
     //    String flightNumber = "6"; // Active flight number

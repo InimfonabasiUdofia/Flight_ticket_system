@@ -1,6 +1,9 @@
 package com.airline.database;
 
 import javax.swing.*;
+
+import com.airline.Home;
+
 import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -118,7 +121,7 @@ public class LoginGUI extends JFrame {
                     SessionManager.setCurrentSession(session);
                     
                     Timer timer = new Timer(1000, e -> {
-                        new HomePage().setVisible(true);
+                        new Home();
                         this.dispose();
                     });
                     timer.setRepeats(false);
