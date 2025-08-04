@@ -1,6 +1,11 @@
-package com.airline;
+package com.airline.database;
 
 import javax.swing.*;
+
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+
+import com.airline.SearchFrame;
+
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,17 +20,26 @@ public class PaymentUI {
       private static final String DB_URL = "jdbc:postgresql://localhost:5432/flight_ticket";
     private static final String DB_USERNAME = "postgres";
     private static final String DB_PASSWORD = "Ini123@@@";
+       private com.airline.database.User currentUser;
+        private UserSession currentSession;
+        static String useremail;
+        String price;
+    
     
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
     }
     
-    PaymentUI(String from,String to,String carrier,String flightNumber){
+    public PaymentUI(String from,String to,String carrier,String flightNumber,String price){
         this.from=from;
         this.to=to;
         this.carrier=carrier;
         this.flightNumber=flightNumber;
-        
+        this.price=price;
+        // this.currentSession = SessionManager.getCurrentSession();
+        // this.currentUser = currentSession.getUser();
+        //   // useremail= currentUser.getEmail();
+        useremail= "inimfonabasi2323@gmail.com";
 
         JFrame frame = new JFrame("Flight Payment");
         frame.setSize(400, 480);
@@ -78,39 +92,52 @@ public class PaymentUI {
         payButton.setFocusPainted(false);
         payButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         payButton.setMaximumSize(new Dimension(150, 40));
+        
 
         payButton.addActionListener(e -> {
+           
+            try{
+                Connection conn=getConnection();
+              
+                String imagedb = """
+                    CREATE TABLE IF NOT EXISTS flight_booking(
+                        id SERIAL PRIMARY KEY,
+                        depart VARCHAR(225) NOT NULL ,
+                        reach VARCHAR(225) NOT NULL ,
+                        carrier VARCHAR(225) NOT NULL ,
+                        flightNumber VARCHAR(225) NOT NULL ,
+                       email VARCHAR(225) UNIQUE NOT NULL)
+                    """;
+                
+                PreparedStatement preparedStatement=conn.prepareStatement(imagedb);
+                preparedStatement.execute();
+                System.out.println("Database flight_booking created successfully");
+            }catch(SQLException erorrs){
+               System.out.println(erorrs);
+            }
             if (cardField.getText().isEmpty() || expiryField.getText().isEmpty() || new String(cvvField.getPassword()).isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in all payment fields.", "Missing Info", JOptionPane.WARNING_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(frame, "✅ Payment of $540 completed!\nThanks for flying with us!", "Success", JOptionPane.INFORMATION_MESSAGE);
                  
+             try {
                 Connection conn=getConnection();
-                 String insertQuery = "INSERT INTO images (from, to,carrier,flightNumber,email) VALUES (?, ?)";
-                 PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-                 insertStmt.setString(1, useremail);
-                
-                 insertStmt.executeUpdate();
-                 System.out.println("Image inserted successfully.");
+                String insertQuery = "INSERT INTO images (depart, reach,carrier,flightNumber,email) VALUES (?, ?,?,?,?) ";
+                PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+                insertStmt.setString(0, from);
+                insertStmt.setString(1, to);
+                insertStmt.setString(2, carrier);
+                insertStmt.setString(3, flightNumber);
+                insertStmt.setString(4, useremail);
+               
+                insertStmt.executeUpdate();
+                System.out.println("Image inserted successfully.");
+             } catch (Exception error) {
+               System.out.println(e);
+             }
             }
         });
-       try{
-         Connection conn=getConnection();
-         String imagedb="""
-             CREATE TABLE IF NOT EXISTS flight_booking(
-              from VARCHAR(225) NOT NULL ,
-              to VARCHAR(225) NOT NULL ,
-              carrier VARCHAR(225) NOT NULL ,
-              flightNumber VARCHAR(225) NOT NULL ,
-             email VARCHAR(225) UNIQUE NOT NULL
-             )
-         """;
-         PreparedStatement preparedStatement=conn.prepareStatement(imagedb);
-         preparedStatement.execute();
-         System.out.println("Database flight_booking created successfully");
-     }catch(SQLException e){
-        System.out.println(e);
-     }
+       
 
         // Back Button
         JButton backButton = new JButton("← Back");

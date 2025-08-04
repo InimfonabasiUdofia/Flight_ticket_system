@@ -4,6 +4,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import org.json.*;
+
+import com.airline.database.PaymentUI;
+
 import java.awt.*;
 
 public class SearchFrame extends Token {
@@ -91,47 +94,53 @@ frame.add(headerPanel, BorderLayout.NORTH);
             int segmentCount = 0;
             
             for (int i = 0; i < data.length(); i++) {
-                JSONObject offer = data.getJSONObject(i);
-                JSONArray itineraries = offer.getJSONArray("itineraries");
+    JSONObject offer = data.getJSONObject(i);
+    
+    // Extract price (assuming structure: "price": {"total": "200.00", "currency": "EUR"})
+    JSONObject priceObj = offer.getJSONObject("price");
+    String totalPrice = priceObj.getString("total");
+    String currency = priceObj.getString("currency");
+    
+    JSONArray itineraries = offer.getJSONArray("itineraries");
+    
+    for (int j = 0; j < itineraries.length(); j++) {
+        JSONObject itinerary = itineraries.getJSONObject(j);
+        JSONArray segments = itinerary.getJSONArray("segments");
+        
+        for (int k = 0; k < segments.length(); k++) {
+            JSONObject segment = segments.getJSONObject(k);
+            
+            // Create new row panel for every two segments
+            if (segmentCount % 2 == 0) {
+                currentRowPanel = new JPanel();
+                currentRowPanel.setLayout(new BoxLayout(currentRowPanel, BoxLayout.X_AXIS));
+                currentRowPanel.setBackground(Color.WHITE);
+                currentRowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                rowsPanel.add(currentRowPanel);
                 
-                for (int j = 0; j < itineraries.length(); j++) {
-                    JSONObject itinerary = itineraries.getJSONObject(j);
-                    JSONArray segments = itinerary.getJSONArray("segments");
-                    
-                    for (int k = 0; k < segments.length(); k++) {
-                        JSONObject segment = segments.getJSONObject(k);
-                        
-                        // Create new row panel for every two segments
-                        if (segmentCount % 2 == 0) {
-                            currentRowPanel = new JPanel();
-                            currentRowPanel.setLayout(new BoxLayout(currentRowPanel, BoxLayout.X_AXIS));
-                            currentRowPanel.setBackground(Color.WHITE);
-                            currentRowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-                            rowsPanel.add(currentRowPanel);
-                            
-                            // Add vertical spacing between rows
-                            if (segmentCount > 0) {
-                                rowsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-                            }
-                        }
-                        
-                        // Create segment panel (your original design)
-                        JPanel flightPanel = createSegmentPanel(segment);
-                        
-                        // Add to current row
-                        if (currentRowPanel != null) {
-                            currentRowPanel.add(flightPanel);
-                            
-                            // Add horizontal spacing between flight panels
-                            if (segmentCount % 2 == 0) {
-                                currentRowPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-                            }
-                        }
-                        
-                        segmentCount++;
-                    }
+                // Add vertical spacing between rows
+                if (segmentCount > 0) {
+                    rowsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                 }
             }
+            
+            // Pass price to createSegmentPanel (modify this method to display price)
+            JPanel flightPanel = createSegmentPanel(segment, totalPrice);
+            
+            // Add to current row
+            if (currentRowPanel != null) {
+                currentRowPanel.add(flightPanel);
+                
+                // Add horizontal spacing between flight panels
+                if (segmentCount % 2 == 0) {
+                    currentRowPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+                }
+            }
+            
+            segmentCount++;
+        }
+    }
+}
             
             mainPanel.add(rowsPanel);
             frame.revalidate();
@@ -189,7 +198,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
         }
     }
     
-    private JPanel createSegmentPanel(JSONObject segment) throws JSONException {
+    private JPanel createSegmentPanel(JSONObject segment ,String price) throws JSONException {
         JSONObject departure = segment.getJSONObject("departure");
         JSONObject arrival = segment.getJSONObject("arrival");
         
@@ -230,6 +239,8 @@ frame.add(headerPanel, BorderLayout.NORTH);
         departureTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         JLabel arrivalTime = new JLabel("🕒 Arrival: " + arrTime);
         arrivalTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JLabel money = new JLabel("€" + price);
+        money.setFont(new Font("Segoe UI", Font.PLAIN, 14));
     
         // === Booking button ===
         JButton bookButton = new JButton("Book Now");
@@ -242,7 +253,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
 
         bookButton.addActionListener(e->{
             frame.dispose();
-            new PaymentUI(from, to, carrier,flightNumber );
+            new PaymentUI(from, to, carrier,flightNumber ,price);
         });
     
         // === Add components to flight panel ===
@@ -253,7 +264,11 @@ frame.add(headerPanel, BorderLayout.NORTH);
         flightPanel.add(departureTime);
         flightPanel.add(arrivalTime);
         flightPanel.add(Box.createVerticalStrut(12));
+        flightPanel.add(money);
+        flightPanel.add(Box.createVerticalStrut(12));
         flightPanel.add(bookButton);
+        
+    
     
         // Add card to outer wrapper
         outerWrapper.add(flightPanel, BorderLayout.CENTER);
