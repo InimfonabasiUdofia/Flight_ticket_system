@@ -13,24 +13,51 @@ public class SearchFrame extends Token {
     private Color secondaryColor = new Color(0x0A6FC4);
     private Color accentColor = new Color(0xFF6B00);
     
-    SearchFrame() {
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 700);
-        frame.setMinimumSize(new Dimension(900, 600));
-        frame.setLayout(new BorderLayout());
-        frame.getContentPane().setBackground(Color.WHITE);
-        
-        // Set up scrollable main panel with grid layout for rows
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBackground(Color.WHITE);
-        
-        JScrollPane scrollPane = new JScrollPane(mainPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        frame.add(scrollPane, BorderLayout.CENTER);
-        
-        frame.setVisible(true);
-        
+    public SearchFrame() {
+      // Keep all your existing frame setup code exactly as is
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+frame.setSize(1000, 700);
+frame.setMinimumSize(new Dimension(900, 600));
+frame.setLayout(new BorderLayout());
+frame.getContentPane().setBackground(Color.WHITE);
+frame.setVisible(true);
+
+// Main panel setup (unchanged)
+mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+mainPanel.setBackground(Color.WHITE);
+
+// Create a wrapper panel to center the cards
+JPanel centerWrapper = new JPanel(new GridBagLayout());
+centerWrapper.setBackground(Color.WHITE);
+centerWrapper.add(mainPanel);
+
+JScrollPane scrollPane = new JScrollPane(centerWrapper);  // Changed to wrap center panel
+scrollPane.setBorder(BorderFactory.createEmptyBorder());
+scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+frame.add(scrollPane, BorderLayout.CENTER);
+
+// Keep your existing header code exactly as is
+JPanel headerPanel = new JPanel();
+headerPanel.setBackground(primaryColor);
+headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+headerPanel.setLayout(new BorderLayout());
+
+JLabel titleLabel = new JLabel("PILOT AIR");
+titleLabel.setForeground(Color.WHITE);
+titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 24));
+
+JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+userPanel.setOpaque(false);
+JLabel userLabel = new JLabel("Welcome, Guest");
+userLabel.setForeground(Color.WHITE);
+userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+userPanel.add(userLabel);
+
+headerPanel.add(titleLabel, BorderLayout.WEST);
+headerPanel.add(userPanel, BorderLayout.EAST);
+frame.add(headerPanel, BorderLayout.NORTH);
+        createNavPanel();
+           
         try {
             String flightData = searchFlights(getAccessToken());
             displayFlightSegments(flightData);
@@ -39,29 +66,6 @@ public class SearchFrame extends Token {
             JOptionPane.showMessageDialog(frame, "Error loading flights: " + e.getMessage(), 
                                        "Error", JOptionPane.ERROR_MESSAGE);
         }
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(primaryColor);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        headerPanel.setLayout(new BorderLayout());
-        
-      
-        
-        JLabel titleLabel = new JLabel("PILOT AIR");
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 24));
-        
-        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        userPanel.setOpaque(false);
-        JLabel userLabel = new JLabel("Welcome, Guest");
-        userLabel.setForeground(Color.WHITE);
-        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        userPanel.add(userLabel);
-        
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        headerPanel.add(userPanel, BorderLayout.EAST);
-        
-        frame.add(headerPanel, BorderLayout.NORTH);
-        createNavPanel();
     }
 
     public void displayFlightSegments(String json) {
@@ -195,21 +199,65 @@ public class SearchFrame extends Token {
         String arrTime = arrival.getString("at");
         String carrier = segment.getString("carrierCode");
         String flightNumber = segment.getString("number");
-        
-        // Your original panel design
+    
+        Color cardBackground = new Color(0xF9F9F9);
+        Color borderColor = new Color(0xCCCCCC);
+        Color primaryColor = new Color(0x074C83);
+    
+        // === Outer wrapper for margin spacing ===
+        JPanel outerWrapper = new JPanel();
+        outerWrapper.setLayout(new BorderLayout());
+        outerWrapper.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));  // outer margin
+        outerWrapper.setOpaque(false);  // transparent so background shows
+    
+        // === Inner flight card ===
         JPanel flightPanel = new JPanel();
         flightPanel.setLayout(new BoxLayout(flightPanel, BoxLayout.Y_AXIS));
-        flightPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
-        flightPanel.setBackground(Color.WHITE);
+        flightPanel.setBackground(cardBackground);
+        flightPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(borderColor, 1),
+            BorderFactory.createEmptyBorder(15, 20, 15, 20)  // inner padding
+        ));
         flightPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        flightPanel.setMaximumSize(new Dimension(450, 250)); // Adjusted width for side-by-side display
-        
-        flightPanel.add(new JLabel("✈️ Flight: " + carrier + " " + flightNumber));
-        flightPanel.add(new JLabel("From: "  + getCityName(from)+ " → To: "  +  getCityName(to)));
-        flightPanel.add(new JLabel("🕒 Departure: " + depTime));
-        flightPanel.add(new JLabel("🕒 Arrival: " + arrTime));
-        
-        return flightPanel;
+        flightPanel.setMaximumSize(new Dimension(450, 250));
+    
+        // === Labels ===
+        JLabel flightInfo = new JLabel("✈️ Flight: " + carrier + " " + flightNumber);
+        flightInfo.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        JLabel route = new JLabel("From: " + getCityName(from) + " → To: " + getCityName(to));
+        route.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JLabel departureTime = new JLabel("🕒 Departure: " + depTime);
+        departureTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JLabel arrivalTime = new JLabel("🕒 Arrival: " + arrTime);
+        arrivalTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    
+        // === Booking button ===
+        JButton bookButton = new JButton("Book Now");
+        bookButton.setBackground(primaryColor);
+        bookButton.setForeground(Color.WHITE);
+        bookButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        bookButton.setFocusPainted(false);
+        bookButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bookButton.setMaximumSize(new Dimension(140, 35));
+
+        bookButton.addActionListener(e->{
+            frame.dispose();
+            new PaymentUI(from, to, carrier,flightNumber );
+        });
+    
+        // === Add components to flight panel ===
+        flightPanel.add(flightInfo);
+        flightPanel.add(Box.createVerticalStrut(8));
+        flightPanel.add(route);
+        flightPanel.add(Box.createVerticalStrut(4));
+        flightPanel.add(departureTime);
+        flightPanel.add(arrivalTime);
+        flightPanel.add(Box.createVerticalStrut(12));
+        flightPanel.add(bookButton);
+    
+        // Add card to outer wrapper
+        outerWrapper.add(flightPanel, BorderLayout.CENTER);
+        return outerWrapper;
     }
      private void createNavPanel() {
         JPanel navPanel = new JPanel();

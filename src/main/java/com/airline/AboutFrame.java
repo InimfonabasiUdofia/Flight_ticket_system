@@ -2,6 +2,9 @@ package com.airline;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
+import com.airline.database.Home;
+
 import java.awt.*;
 
 public class AboutFrame {
@@ -144,7 +147,5 @@ public class AboutFrame {
         return panel;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AboutFrame());
-    }
+  
 }

@@ -3,6 +3,8 @@ package com.airline;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+import com.airline.database.Home;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;

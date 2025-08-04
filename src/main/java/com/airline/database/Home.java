@@ -1,15 +1,30 @@
-package com.airline;
+package com.airline.database;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.w3c.dom.events.MouseEvent;
+
+import com.airline.AboutFrame;
+import com.airline.ContactUsFrame;
+import com.airline.MybookingFrame;
+import com.airline.SearchFrame;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.geom.Ellipse2D;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 public class Home {
@@ -20,13 +35,58 @@ public class Home {
     private Color accentColor = new Color(0xFF6B00);
     File selectedFile ;
     String image="C:\\Users\\INIMFON-ABASI\\Documents\\IMG20250708114027.jpg";
+     private static final String DB_URL = "jdbc:postgresql://localhost:5432/flight_ticket";
+    private static final String DB_USERNAME = "postgres";
+    private static final String DB_PASSWORD = "Ini123@@@";
+    static String useremail;
+    private com.airline.database.User currentUser;
+    private UserSession currentSession;
+    static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+    }
+    
 
     public Home() {
+       
+       
+        // this.currentSession = SessionManager.getCurrentSession();
+        // this.currentUser = currentSession.getUser();
+        // useremail= currentUser.getEmail();
+        useremail= null;
+        letgo();
         createFrame();
         createNavPanel();
         createHomeContent();
         frame.setVisible(true);
+        System.out.println(useremail);
     }
+    static byte[]  getimg(){
+        Connection conn = null;
+        PreparedStatement selectStmt = null;
+        ResultSet rs = null;
+            try {
+                conn = getConnection();
+                String selectQuery = "SELECT * FROM images WHERE email = ?";
+                selectStmt = conn.prepareStatement(selectQuery);
+                selectStmt.setString(1, useremail);
+                rs = selectStmt.executeQuery();
+                if (rs.next()) {
+                   
+                    return rs.getBytes("image_data");
+                   
+                } 
+            } catch (Exception e) {
+                System.out.println(e);
+            } finally {
+                // Properly close resources
+                try { if (rs != null) rs.close(); } catch (SQLException e) { /* log */ }
+                try { if (selectStmt != null) selectStmt.close(); } catch (SQLException e) { /* log */ }
+                try { if (conn != null) conn.close(); } catch (SQLException e) { /* log */ }
+            }
+           
+                return new byte[0];
+      }
+
 
     private void createFrame() {
         frame = new JFrame("Airline Booking System");
@@ -52,11 +112,29 @@ public class Home {
         userPanel.setOpaque(false);
         
         // Circular Image Avatar
-        JLabel avatarLabel = new JLabel() {
+      
+
+
+
+        JButton avatarLabel = new JButton() {
             @Override
             protected void paintComponent(Graphics g) {
                 // Load your image (replace with actual path)
-                ImageIcon icon = new ImageIcon(image);
+                byte[] imageData = getimg();
+                ImageIcon icon ;
+                if (imageData == null) {
+                    // Explicit null case - use a default placeholder image
+                     icon = new ImageIcon( "logo.png");
+                   
+                } else if (imageData.length == 0) {
+                    // Empty byte array case - use logo
+                     icon = new ImageIcon( "logo.png");
+                } else {
+                    // Valid image data case
+                     icon = new ImageIcon(imageData);
+                 
+                }
+              
                 Image img = icon.getImage();
                 
                 // Create circular clip
@@ -97,25 +175,73 @@ public class Home {
         
         frame.add(headerPanel, BorderLayout.NORTH);
         
-     
-       
-avatarLabel.addMouseListener(new MouseAdapter() {
-    public void mouseClicked(MouseEvent e) {
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "Image Files", "jpg", "jpeg", "png", "gif");
-        fileChooser.setFileFilter(filter);
-         int result = fileChooser.showOpenDialog(null);
-    if (result == JFileChooser.APPROVE_OPTION) {
-         selectedFile = fileChooser.getSelectedFile();  
-    }
-        image= selectedFile.getAbsolutePath();
-    }
-});
-
+        avatarLabel.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                    "Image Files", "jpg", "jpeg", "png", "gif");
+            fileChooser.setFileFilter(filter);
+    
+            int result = fileChooser.showOpenDialog(null);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+    
+                try {
+                    byte[] imageBytes = Files.readAllBytes(selectedFile.toPath());
+                    System.out.println("Image size: " + imageBytes.length + " bytes");
+    
+                    Connection conn = getConnection();
+                    
+                    // Check if user already has an image
+                    String selectQuery = "SELECT * FROM images WHERE email = ?";
+                    PreparedStatement selectStmt = conn.prepareStatement(selectQuery);
+                    selectStmt.setString(1, useremail);
+                    ResultSet rs = selectStmt.executeQuery();
+    
+                    if (rs.next()) {
+                        // Update existing image
+                        String updateQuery = "UPDATE images SET image_data = ? WHERE email = ?";
+                        PreparedStatement updateStmt = conn.prepareStatement(updateQuery);
+                        updateStmt.setBytes(1, imageBytes);
+                        updateStmt.setString(2, useremail);
+                        updateStmt.executeUpdate();
+                        System.out.println("Image updated successfully.");
+                    } else {
+                        // Insert new image
+                        String insertQuery = "INSERT INTO images (email, image_data) VALUES (?, ?)";
+                        PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+                        insertStmt.setString(1, useremail);
+                        insertStmt.setBytes(2, imageBytes);
+                        insertStmt.executeUpdate();
+                        System.out.println("Image inserted successfully.");
+                    }
+    
+                } catch (Exception error) {
+                    error.printStackTrace();
+                }
+            }
+        });
         
-        
     }
+    
+ 
+  public void letgo(){
+  
+     try{
+         Connection conn=getConnection();
+         String imagedb="""
+             CREATE TABLE IF NOT EXISTS images(
+             image_data BYTEA ,
+             email VARCHAR(225) UNIQUE NOT NULL
+             )
+         """;
+         PreparedStatement preparedStatement=conn.prepareStatement(imagedb);
+         preparedStatement.execute();
+         System.out.println("Database images created successfully");
+     }catch(SQLException e){
+        System.out.println(e);
+     }
+  }
+ 
 
     private void createNavPanel() {
         JPanel navPanel = new JPanel();

@@ -2,8 +2,6 @@ package com.airline.database;
 
 import javax.swing.*;
 
-import com.airline.Home;
-
 import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,7 +15,7 @@ public class LoginGUI extends JFrame {
     private JButton verifyButton;
     private JLabel statusLabel;
     private JPanel otpPanel;
-    private String currentEmail;
+    public String currentEmail;
     
     public LoginGUI() {
         initializeGUI();
