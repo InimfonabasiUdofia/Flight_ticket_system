@@ -5,16 +5,29 @@ import javax.swing.border.EmptyBorder;
 
 import org.json.*;
 
+import com.airline.database.Home;
+import com.airline.database.LoginGUI;
+import com.airline.database.MybookingFrame;
 import com.airline.database.PaymentUI;
 
 import java.awt.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.TimeZone;
+
 
 public class SearchFrame extends Token {
-    JFrame frame = new JFrame("");
+    JFrame frame = new JFrame("PILOT AIR- Book Flight");
     JPanel mainPanel = new JPanel();
     private Color primaryColor = new Color(0x074C83);
     private Color secondaryColor = new Color(0x0A6FC4);
     private Color accentColor = new Color(0xFF6B00);
+ 
+    private JComboBox<String> destinationCombo;
+    private JTextField dateField;
+    static JButton searchButton;
     
     public SearchFrame() {
       // Keep all your existing frame setup code exactly as is
@@ -51,28 +64,72 @@ titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 24));
 
 JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 userPanel.setOpaque(false);
-JLabel userLabel = new JLabel("Welcome, Guest");
+JLabel userLabel = new JLabel("");
 userLabel.setForeground(Color.WHITE);
 userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 userPanel.add(userLabel);
 
+JComboBox<String> destinationCombo = new JComboBox<>(new String[] {
+    "JFK", "LAX", "PAR", "LHR", "DXB", 
+    "CDG", "FRA", "AMS", "MAD", "BCN", 
+    "FCO", "BRU", "ZRH", "VIE", "ORD", 
+    "YYZ", "YUL", "MIA", "SFO", "DFW", 
+    "HKG", "SIN", "NRT", "SYD", "ORY", 
+    "DUB", "WAW", "BEG", "CMN",
+});
+for (int i = 0; i < destinationCombo.getItemCount(); i++) {
+    String code = destinationCombo.getItemAt(i);
+    destinationCombo.insertItemAt(getCityName(code), i);
+    destinationCombo.removeItemAt(i + 1); // Remove the original code
+}
+
+
+dateField = new JTextField(1);
+dateField.setText(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+searchButton = new JButton("Search Flights");
+
+// Simple date picker button
+JButton datePickerBtn = new JButton("📅");
+datePickerBtn.addActionListener(e -> {
+    String selectedDate = (String) JOptionPane.showInputDialog(datePickerBtn, this, "Enter date (YYYY-MM-DD):", 0, null, null, dateField.getText());
+    if (selectedDate != null) {
+        dateField.setText(selectedDate);
+    }
+});
+JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5)); // spacing between items
+centerPanel.add(new JLabel("Destination:"));
+centerPanel.add(destinationCombo);
+centerPanel.add(new JLabel("Date:"));
+centerPanel.add(datePickerBtn);
+centerPanel.add(searchButton);
+
+searchButton.addActionListener(e->{
+    try {
+        String flightData = searchFlights(getAccessToken(),destinationCombo,dateField);
+        displayFlightSegments(flightData);
+    } catch (Exception error) {
+        System.out.println(error);
+        JOptionPane.showMessageDialog(frame, "Error loading flights: " + error.getMessage(), 
+                                   "Error", JOptionPane.ERROR_MESSAGE);
+    }
+});
+
+ 
+       
+
 headerPanel.add(titleLabel, BorderLayout.WEST);
 headerPanel.add(userPanel, BorderLayout.EAST);
+headerPanel.add(centerPanel, BorderLayout.SOUTH);
+
+
 frame.add(headerPanel, BorderLayout.NORTH);
         createNavPanel();
-           
-        try {
-            String flightData = searchFlights(getAccessToken());
-            displayFlightSegments(flightData);
-        } catch (Exception e) {
-            System.out.println(e);
-            JOptionPane.showMessageDialog(frame, "Error loading flights: " + e.getMessage(), 
-                                       "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        
+       
     }
 
     public void displayFlightSegments(String json) {
-        mainPanel.removeAll(); // Clear previous results
+        mainPanel.removeAll(); 
         
         try {
             JSONObject response = new JSONObject(json);
@@ -87,6 +144,9 @@ frame.add(headerPanel, BorderLayout.NORTH);
             JPanel rowsPanel = new JPanel();
             rowsPanel.setLayout(new BoxLayout(rowsPanel, BoxLayout.Y_AXIS));
             rowsPanel.setBackground(Color.WHITE);
+
+
+           
             
             // Temporary panel to hold two flights per row
             JPanel currentRowPanel = null;
@@ -99,7 +159,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
     // Extract price (assuming structure: "price": {"total": "200.00", "currency": "EUR"})
     JSONObject priceObj = offer.getJSONObject("price");
     String totalPrice = priceObj.getString("total");
-    String currency = priceObj.getString("currency");
+   
     
     JSONArray itineraries = offer.getJSONArray("itineraries");
     
@@ -151,6 +211,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
                                         "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
     public String getCityName(String iataCode) {
         switch(iataCode) {
             // Europe
@@ -181,7 +242,6 @@ frame.add(headerPanel, BorderLayout.NORTH);
             case "SIN": return "Singapore";
             case "NRT": return "Tokyo";
             case "SYD": return "Sydney";
-            case "ORY": return "Paris (Orly)";
             case "DUB": return "Dublin";   
             case "WAW": return "Warsaw (Chopin)";
             case "BEG": return "Belgrade (Nikola Tesla)";
@@ -229,15 +289,17 @@ frame.add(headerPanel, BorderLayout.NORTH);
         ));
         flightPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         flightPanel.setMaximumSize(new Dimension(450, 250));
-    
+
+        
+       
         // === Labels ===
-        JLabel flightInfo = new JLabel("✈️ Flight: " + carrier + " " + flightNumber);
+        JLabel flightInfo = new JLabel("Flight: " + carriername(carrier) + " " + flightNumber);
         flightInfo.setFont(new Font("Segoe UI", Font.BOLD, 16));
         JLabel route = new JLabel("From: " + getCityName(from) + " → To: " + getCityName(to));
         route.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JLabel departureTime = new JLabel("🕒 Departure: " + depTime);
+        JLabel departureTime = new JLabel("Departure: " +  convertToHumanTime(depTime));
         departureTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JLabel arrivalTime = new JLabel("🕒 Arrival: " + arrTime);
+        JLabel arrivalTime = new JLabel("Arrival: " + convertToHumanTime(arrTime) );
         arrivalTime.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         JLabel money = new JLabel("€" + price);
         money.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -253,7 +315,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
 
         bookButton.addActionListener(e->{
             frame.dispose();
-            new PaymentUI(from, to, carrier,flightNumber ,price);
+            new PaymentUI(from, to, carrier,flightNumber ,price,depTime,arrTime);
         });
     
         // === Add components to flight panel ===
@@ -276,7 +338,7 @@ frame.add(headerPanel, BorderLayout.NORTH);
     }
      private void createNavPanel() {
         JPanel navPanel = new JPanel();
-        navPanel.setLayout(new GridLayout(5, 1, 0, 10));
+        navPanel.setLayout(new GridLayout(6, 1, 0, 10));
         navPanel.setPreferredSize(new Dimension(180, 0));
         navPanel.setBackground(primaryColor);
         navPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
@@ -287,7 +349,12 @@ frame.add(headerPanel, BorderLayout.NORTH);
         JButton bookingsBtn = createNavButton("My Bookings");
         JButton aboutBtn = createNavButton("About");
         JButton contactBtn = createNavButton("Contact");
+        JButton logout = createNavButton("Logout");
 
+        homeBtn.addActionListener(e -> {
+            frame.dispose();
+            Home contact = new Home();
+        });
         searchBtn.addActionListener(e -> {
             frame.dispose();
             SearchFrame contact = new SearchFrame();
@@ -304,14 +371,31 @@ frame.add(headerPanel, BorderLayout.NORTH);
             frame.dispose();
             ContactUsFrame contact = new ContactUsFrame();
         });
+        logout.addActionListener(e -> {
+            frame.dispose();
+            LoginGUI contact = new LoginGUI();
+        });
         
         navPanel.add(homeBtn);
         navPanel.add(searchBtn);
         navPanel.add(bookingsBtn);
         navPanel.add(aboutBtn);
         navPanel.add(contactBtn);
+        navPanel.add(logout);
 
         frame.add(navPanel, BorderLayout.WEST);
+    }
+    static  String carriername(String code){
+        switch (code) {
+            case "AF": return "Air France";
+            case "DL": return "Delta Airlines";
+            case "AA": return "American Airlines";
+            case "VS": return "Virgin Atlantic";
+            case "IB": return "Iberia";
+            case "B6": return "JetBlue Airways";
+            case "N0": return "Norse Atlantic Airways";
+            default:return code;
+        }
     }
 
     private JButton createNavButton(String text) {
@@ -335,5 +419,24 @@ frame.add(headerPanel, BorderLayout.NORTH);
         
         return button;
     }
+    public static String convertToHumanTime(String isoTime) {
+        try {
+            // Input format (ISO 8601)
+            SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));  // If time is in UTC
+            
+            // Parse the input time
+            Date date = isoFormat.parse(isoTime);
+            
+            // Output format (human readable)
+            SimpleDateFormat humanFormat = new SimpleDateFormat("EEE, MMM dd yyyy 'at' hh:mm a");
+            humanFormat.setTimeZone(TimeZone.getDefault());  // Convert to local timezone
+            
+            return humanFormat.format(date);
+        } catch (Exception e) {
+            return isoTime; // Return original if parsing fails
+        }
+    }
+
 
 }

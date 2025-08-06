@@ -9,7 +9,6 @@ import org.w3c.dom.events.MouseEvent;
 
 import com.airline.AboutFrame;
 import com.airline.ContactUsFrame;
-import com.airline.MybookingFrame;
 import com.airline.SearchFrame;
 
 import java.awt.*;
@@ -49,10 +48,10 @@ public class Home {
     public Home() {
        
        
-        // this.currentSession = SessionManager.getCurrentSession();
-        // this.currentUser = currentSession.getUser();
-        // useremail= currentUser.getEmail();
-        useremail= null;
+        this.currentSession = SessionManager.getCurrentSession();
+        this.currentUser = currentSession.getUser();
+        useremail= currentUser.getEmail();
+       
         letgo();
         createFrame();
         createNavPanel();
@@ -119,39 +118,27 @@ public class Home {
         JButton avatarLabel = new JButton() {
             @Override
             protected void paintComponent(Graphics g) {
-                // Load your image (replace with actual path)
+                // Your existing paint code
                 byte[] imageData = getimg();
-                ImageIcon icon ;
-                if (imageData == null) {
-                    // Explicit null case - use a default placeholder image
-                     icon = new ImageIcon( "logo.png");
-                   
-                } else if (imageData.length == 0) {
-                    // Empty byte array case - use logo
-                     icon = new ImageIcon( "logo.png");
+                ImageIcon icon;
+                if (imageData == null || imageData.length == 0) {
+                    icon = new ImageIcon("logo.png");
                 } else {
-                    // Valid image data case
-                     icon = new ImageIcon(imageData);
-                 
+                    icon = new ImageIcon(imageData);
                 }
-              
-                Image img = icon.getImage();
                 
-                // Create circular clip
+                Image img = icon.getImage();
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Create circle
                 int diameter = Math.min(getWidth(), getHeight());
                 Ellipse2D.Double circle = new Ellipse2D.Double(0, 0, diameter, diameter);
                 g2.setClip(circle);
                 
-                // Draw image centered
                 int x = (getWidth() - img.getWidth(null)) / 2;
                 int y = (getHeight() - img.getHeight(null)) / 2;
                 g2.drawImage(img, x, y, null);
                 
-                // Optional: Add white border
                 g2.setClip(null);
                 g2.setColor(Color.WHITE);
                 g2.setStroke(new BasicStroke(2));
@@ -160,9 +147,16 @@ public class Home {
             
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(40, 40); // Fixed avatar size
+                return new Dimension(40, 40);
             }
         };
+        
+        // Remove all button styling to make it look like a label
+        avatarLabel.setBorderPainted(false);
+        avatarLabel.setContentAreaFilled(false);
+        avatarLabel.setFocusPainted(false);
+        avatarLabel.setOpaque(false);
+        avatarLabel.setMargin(new Insets(0, 0, 0, 0));
         
         // Ensure avatar stays centered vertically
         JPanel avatarContainer = new JPanel(new GridBagLayout());
@@ -174,6 +168,7 @@ public class Home {
         headerPanel.add(userPanel, BorderLayout.EAST);
         
         frame.add(headerPanel, BorderLayout.NORTH);
+        
         
         avatarLabel.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -245,7 +240,7 @@ public class Home {
 
     private void createNavPanel() {
         JPanel navPanel = new JPanel();
-        navPanel.setLayout(new GridLayout(5, 1, 0, 10));
+        navPanel.setLayout(new GridLayout(6, 1, 0, 10));
         navPanel.setPreferredSize(new Dimension(180, 0));
         navPanel.setBackground(primaryColor);
         navPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
@@ -256,6 +251,7 @@ public class Home {
         JButton bookingsBtn = createNavButton("My Bookings");
         JButton aboutBtn = createNavButton("About");
         JButton contactBtn = createNavButton("Contact");
+        JButton logout = createNavButton("Logout");
 
         searchBtn.addActionListener(e -> {
             frame.dispose();
@@ -273,12 +269,17 @@ public class Home {
             frame.dispose();
             ContactUsFrame contact = new ContactUsFrame();
         });
+        logout.addActionListener(e -> {
+            frame.dispose();
+            LoginGUI contact = new LoginGUI();
+        });
         
         navPanel.add(homeBtn);
         navPanel.add(searchBtn);
         navPanel.add(bookingsBtn);
         navPanel.add(aboutBtn);
         navPanel.add(contactBtn);
+        navPanel.add(logout);
 
         frame.add(navPanel, BorderLayout.WEST);
     }
@@ -318,18 +319,19 @@ public class Home {
             BorderFactory.createEmptyBorder(30, 30, 30, 30)
         ));
 
-        ImageIcon logIcon = new ImageIcon(getClass().getResource("/logo.png"));
+        ImageIcon logIcon = new ImageIcon(getClass().getResource("/logo2.png"));
         Image resizedImage = logIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
         ImageIcon resizedlogo = new ImageIcon(resizedImage);
       
     
-        JLabel welcomeLabel = new JLabel("Welcome to SkyWings Airlines", resizedlogo, SwingConstants.LEFT);
+        JLabel welcomeLabel = new JLabel("Welcome to Pilot Air", resizedlogo, SwingConstants.LEFT);
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
         welcomeLabel.setForeground(primaryColor);
         
-        JLabel subLabel = new JLabel("Find the best flight deals to destinations around the world");
+        JLabel subLabel = new JLabel("Find the best flight deals From Paris to Your destinations ");
         subLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         subLabel.setForeground(new Color(80, 80, 80));
+        
         
         JPanel textPanel = new JPanel(new GridLayout(2, 1, 0, 10));
         textPanel.setOpaque(false);
@@ -363,15 +365,12 @@ public class Home {
             BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
         
-        JButton searchButton = new JButton("Search Flights");
-        styleActionButton(searchButton);
+      
         
-        quickSearchPanel.add(searchField);
-        quickSearchPanel.add(Box.createRigidArea(new Dimension(15, 0)));
-        quickSearchPanel.add(searchButton);
+     
         
         // Special offers section
-        JPanel offersPanel = createOffersSection();
+       
         
         // Add components to content panel
         JPanel mainContent = new JPanel();
@@ -380,123 +379,13 @@ public class Home {
         
         mainContent.add(heroPanel);
         mainContent.add(Box.createRigidArea(new Dimension(0, 30)));
-        mainContent.add(quickSearchPanel);
-        mainContent.add(Box.createRigidArea(new Dimension(0, 30)));
-        mainContent.add(offersPanel);
+       
         
         contentPanel.add(mainContent, BorderLayout.NORTH);
         frame.add(contentPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createOffersSection() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Color.WHITE);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        JLabel title = new JLabel("Special Offers");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        title.setForeground(primaryColor);
-        title.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.add(title);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
-        
-        // Sample offer cards
-        String[] destinations = {"Paris", "Tokyo", "New York", "Bali"};
-        String[] prices = {"$499", "$799", "$649", "$599"};
-        String[] dates = {"May 15-30, 2023", "Jun 1-15, 2023", "Jul 10-25, 2023", "Aug 5-20, 2023"};
-        
-        JPanel cardsPanel = new JPanel();
-        cardsPanel.setLayout(new BoxLayout(cardsPanel, BoxLayout.X_AXIS));
-        cardsPanel.setBackground(Color.WHITE);
-        
-        for (int i = 0; i < destinations.length; i++) {
-            JPanel card = createOfferCard(destinations[i], prices[i], dates[i]);
-            cardsPanel.add(card);
-            if (i < destinations.length - 1) {
-                cardsPanel.add(Box.createRigidArea(new Dimension(15, 0)));
-            }
-        }
-        
-        panel.add(cardsPanel);
-        return panel;
-    }
-
-    private JPanel createOfferCard(String destination, String price, String dates) {
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(250, 250, 250));
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220)),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-        card.setMaximumSize(new Dimension(200, 200));
-        
-        JLabel destLabel = new JLabel(destination);
-        destLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        destLabel.setForeground(primaryColor);
-        
-        JLabel priceLabel = new JLabel(price);
-        priceLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        priceLabel.setForeground(accentColor);
-        
-        JLabel dateLabel = new JLabel(dates);
-        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        dateLabel.setForeground(new Color(100, 100, 100));
-        
-        JButton bookButton = new JButton("Book Now");
-        styleCardButton(bookButton);
-        
-        card.add(destLabel);
-        card.add(Box.createRigidArea(new Dimension(0, 5)));
-        card.add(priceLabel);
-        card.add(Box.createRigidArea(new Dimension(0, 5)));
-        card.add(dateLabel);
-        card.add(Box.createRigidArea(new Dimension(0, 15)));
-        card.add(bookButton);
-        
-        return card;
-    }
-
-    private void styleActionButton(JButton button) {
-        button.setFocusPainted(false);
-        button.setBackground(accentColor);
-        button.setForeground(Color.WHITE);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(0xFF8C00));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(accentColor);
-            }
-        });
-    }
-
-    private void styleCardButton(JButton button) {
-        button.setFocusPainted(false);
-        button.setBackground(Color.WHITE);
-        button.setForeground(primaryColor);
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(primaryColor, 1),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(240, 240, 240));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(Color.WHITE);
-            }
-        });
-    }
+   
 
 }
    

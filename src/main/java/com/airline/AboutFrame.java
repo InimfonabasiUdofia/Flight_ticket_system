@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import com.airline.database.Home;
+import com.airline.database.LoginGUI;
+import com.airline.database.MybookingFrame;
 
 import java.awt.*;
 
@@ -13,8 +15,9 @@ public class AboutFrame {
     
     public AboutFrame() {
         // Create the frame
-        JFrame frame = new JFrame("About PILOT AIR");
-        frame.setSize(800, 600);
+        JFrame frame = new JFrame(" PILOT AIR-About");
+        frame.setSize(1000, 700);
+        frame.setMinimumSize(new Dimension(900, 600));
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout());
         frame.getContentPane().setBackground(Color.WHITE);
@@ -46,7 +49,7 @@ public class AboutFrame {
         
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         userPanel.setOpaque(false);
-        JLabel userLabel = new JLabel("Welcome, Guest");
+        JLabel userLabel = new JLabel("");
         userLabel.setForeground(Color.WHITE);
         userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         userPanel.add(userLabel);
@@ -59,17 +62,40 @@ public class AboutFrame {
 
     private JPanel createNavPanel(JFrame frame) {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(5, 1, 0, 10));
+        panel.setLayout(new GridLayout(6, 1, 0, 10));
         panel.setPreferredSize(new Dimension(180, 0));
         panel.setBackground(primaryColor);
         panel.setBorder(new EmptyBorder(20, 10, 20, 10));
 
         // Navigation buttons (reuse your existing button style)
-        panel.add(createNavButton("Home", () -> new Home()));
-        panel.add(createNavButton("Search Flights", () -> new SearchFrame()));
-        panel.add(createNavButton("My Bookings", () -> new MybookingFrame()));
-        panel.add(createNavButton("About", () -> {})); // Current page
-        panel.add(createNavButton("Contact", () -> new ContactUsFrame()));
+        panel.add(createNavButton("Home", () -> {
+            frame.dispose();
+            new Home();
+        }));
+        
+        panel.add(createNavButton("Search Flights", () -> {
+            frame.dispose();
+            new SearchFrame();
+        }));
+        
+        panel.add(createNavButton("My Bookings", () -> {
+            frame.dispose();
+            new MybookingFrame();
+        }));
+        
+        panel.add(createNavButton("About", () -> {
+           
+        }));
+        
+        panel.add(createNavButton("Contact", () -> {
+            frame.dispose();
+            new ContactUsFrame();
+        }));
+        panel.add(createNavButton("Logout", () -> {
+            frame.dispose();
+            new LoginGUI();
+        }));
+        
         
         return panel;
     }
@@ -127,12 +153,12 @@ public class AboutFrame {
         // About Text
         JTextArea aboutText = new JTextArea(
             "PILOT AIR - Your Trusted Airline\n\n" +
-            "Founded in 2023, PILOT AIR has quickly become a leader in comfortable and affordable air travel.\n\n" +
-            "With over 50 destinations worldwide, we're committed to providing exceptional service with\n" +
+            "Founded in 2025, PILOT AIR has quickly become a leader in Paris ,comfortable and affordable air travel.\n\n" +
+            " we're committed to providing exceptional service with\n" +
             "modern aircraft and professional crew.\n\n" +
             "Safety Ratings: ★★★★★\n" +
             "Customer Satisfaction: 98%\n\n" +
-            "© 2023 PILOT AIR. All rights reserved."
+            "© 2025 PILOT AIR. All rights reserved."
         );
         aboutText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         aboutText.setForeground(new Color(80, 80, 80));

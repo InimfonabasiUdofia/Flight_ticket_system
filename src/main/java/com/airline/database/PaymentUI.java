@@ -24,22 +24,69 @@ public class PaymentUI {
         private UserSession currentSession;
         static String useremail;
         String price;
+        String deptime;
+        String arrtime;
     
     
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
     }
+    public String getCityName(String iataCode) {
+        switch(iataCode) {
+            // Europe
+            case "CDG": return "Paris(Charles de Gaulle)";
+            case "LHR": return "London (Heathrow)";
+            case "FRA": return "Frankfurt";
+            case "AMS": return "Amsterdam";
+            case "MAD": return "Madrid";
+            case "BCN": return "Barcelona";
+            case "FCO": return "Rome";
+            case "BRU": return "Brussels";
+            case "ZRH": return "Zurich";
+            case "VIE": return "Vienna";
+            
+            // North America
+            case "JFK": return "New York";
+            case "LAX": return "Los Angeles";
+            case "ORD": return "Chicago";
+            case "YYZ": return "Toronto";
+            case "YUL": return "Montreal";
+            case "MIA": return "Miami";
+            case "SFO": return "San Francisco";
+            case "DFW": return "Dallas";
+            
+            // Other regions
+            case "DXB": return "Dubai";
+            case "HKG": return "Hong Kong";
+            case "SIN": return "Singapore";
+            case "NRT": return "Tokyo";
+            case "SYD": return "Sydney";
+            case "DUB": return "Dublin";   
+            case "WAW": return "Warsaw (Chopin)";
+            case "BEG": return "Belgrade (Nikola Tesla)";
+            case "CMN": return "Casablanca (Mohammed V)";
+            case "IST": return "Istanbul";
+            case "TK": return "Turkish Airlines Flight"; // For codes like TK11
+            case "KEF": return "Reykjavik (Keflavik)";
+            case "TP": return "TAP Portugal Flight"; // For codes like TP209
+            case "LGW": return "London (Gatwick)";
+            case "NCE": return "Nice (Côte d'Azur)";
+            // Add more as needed...
+            
+            default: return iataCode; // Return the code if city not found
+        }
+    }
     
-    public PaymentUI(String from,String to,String carrier,String flightNumber,String price){
+    public PaymentUI(String from,String to,String carrier,String flightNumber,String price ,String deptime, String arrtime){
         this.from=from;
         this.to=to;
         this.carrier=carrier;
         this.flightNumber=flightNumber;
         this.price=price;
-        // this.currentSession = SessionManager.getCurrentSession();
-        // this.currentUser = currentSession.getUser();
-        //   // useremail= currentUser.getEmail();
-        useremail= "inimfonabasi2323@gmail.com";
+        this.currentSession = SessionManager.getCurrentSession();
+        this.currentUser = currentSession.getUser();
+          useremail= currentUser.getEmail();
+        // useremail= "inimfonabasi2323@gmail.com";
 
         JFrame frame = new JFrame("Flight Payment");
         frame.setSize(400, 480);
@@ -59,11 +106,11 @@ public class PaymentUI {
         panel.add(Box.createVerticalStrut(20));
 
         // Route & Price Labels
-        JLabel routeLabel = new JLabel("✈️ Route:  "+from+"→ "+to);
+        JLabel routeLabel = new JLabel(" Route:  "+getCityName(from)+"→ "+getCityName(to));
         routeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         panel.add(routeLabel);
 
-        JLabel priceLabel = new JLabel("💰 Price: $540");
+        JLabel priceLabel = new JLabel(" Price: €"+price);
         priceLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         panel.add(priceLabel);
 
@@ -106,7 +153,10 @@ public class PaymentUI {
                         reach VARCHAR(225) NOT NULL ,
                         carrier VARCHAR(225) NOT NULL ,
                         flightNumber VARCHAR(225) NOT NULL ,
-                       email VARCHAR(225) UNIQUE NOT NULL)
+                         price VARCHAR(225) NOT NULL ,
+                          deptime VARCHAR(225) NOT NULL ,
+                           arrtime VARCHAR(225) NOT NULL ,
+                       email VARCHAR(225)  NOT NULL)
                     """;
                 
                 PreparedStatement preparedStatement=conn.prepareStatement(imagedb);
@@ -122,18 +172,21 @@ public class PaymentUI {
                  
              try {
                 Connection conn=getConnection();
-                String insertQuery = "INSERT INTO images (depart, reach,carrier,flightNumber,email) VALUES (?, ?,?,?,?) ";
+                String insertQuery = "INSERT INTO flight_booking(depart, reach,carrier,flightNumber,email,price,deptime,arrtime) VALUES (?, ?,?,?,?,?,?,?) ";
                 PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-                insertStmt.setString(0, from);
-                insertStmt.setString(1, to);
-                insertStmt.setString(2, carrier);
-                insertStmt.setString(3, flightNumber);
-                insertStmt.setString(4, useremail);
+                insertStmt.setString(1, from);
+                insertStmt.setString(2, to);
+                insertStmt.setString(3, carrier);
+                insertStmt.setString(4, flightNumber);
+                insertStmt.setString(5, useremail);
+                insertStmt.setString(6, price);
+                insertStmt.setString(7, deptime);
+                insertStmt.setString(8, arrtime);
                
                 insertStmt.executeUpdate();
-                System.out.println("Image inserted successfully.");
-             } catch (Exception error) {
-               System.out.println(e);
+                System.out.println("flight inserted successfully.");
+             } catch (Exception error3) {
+               System.out.println(error3);
              }
             }
         });

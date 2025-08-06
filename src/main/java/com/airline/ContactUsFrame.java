@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import com.airline.database.Home;
+import com.airline.database.LoginGUI;
+import com.airline.database.MybookingFrame;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -65,7 +67,7 @@ public class ContactUsFrame {
                 
                 JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
                 userPanel.setOpaque(false);
-                JLabel userLabel = new JLabel("Welcome, Guest");
+                JLabel userLabel = new JLabel("");
                 userLabel.setForeground(Color.WHITE);
                 userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 userPanel.add(userLabel);
@@ -78,7 +80,7 @@ public class ContactUsFrame {
         
             private void createNavPanel() {
                 JPanel navPanel = new JPanel();
-                navPanel.setLayout(new GridLayout(5, 1, 0, 10));
+                navPanel.setLayout(new GridLayout(6, 1, 0, 10));
                 navPanel.setPreferredSize(new Dimension(180, 0));
                 navPanel.setBackground(primaryColor);
                 navPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
@@ -89,6 +91,7 @@ public class ContactUsFrame {
                 JButton bookingsBtn = createNavButton("My Bookings");
                 JButton aboutBtn = createNavButton("About");
                 JButton contactBtn = createNavButton("Contact");
+                JButton logout = createNavButton("logout");
         
                 // Add action listeners
                 homeBtn.addActionListener(e -> {
@@ -107,6 +110,10 @@ public class ContactUsFrame {
                     frame.dispose();
                     new AboutFrame();
                 });
+                logout.addActionListener(e -> {
+                    frame.dispose();
+                    new LoginGUI();
+                });
             
                 
                 navPanel.add(homeBtn);
@@ -114,6 +121,7 @@ public class ContactUsFrame {
                 navPanel.add(bookingsBtn);
                 navPanel.add(aboutBtn);
                 navPanel.add(contactBtn);
+                navPanel.add(logout);
         
                 frame.add(navPanel, BorderLayout.WEST);
             }
